@@ -18,6 +18,6 @@ Change
           sY = Math.max(0, this.cropY * this._filterScalingY);
 
 To
+
           sX = this.cropX * this._filterScalingX,
           sY = this.cropY * this._filterScalingY;
-          
