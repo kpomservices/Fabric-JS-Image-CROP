@@ -1,0 +1,157 @@
+<style>
+canvas {
+  border:1px solid lightgrey;
+}
+</style>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+<script src="./js/fabric.js"></script>
+<h2>Double Click on the Image to do the image cropping</h2>
+<canvas id="c" width="1200" height="500">
+</canvas>
+<script>
+    var selectedObject = null;
+    var isCrop = false;
+
+    var canvas = new fabric.Canvas('c', {
+        preserveObjectStacking: true,
+        skipTargetFind: false,
+        renderOnAddRemove: false,
+    });
+
+    canvas.observe('object:scaling', function(e) {
+        if(selectedObject && selectedObject.type === 'image' && !isCrop) {
+            selectedObject.oldScaleX = selectedObject.scaleX;
+            selectedObject.oldScaleY = selectedObject.scaleY;
+            selectedObject.setCoords();
+        }
+    });
+
+    canvas.observe('object:selected', function(e) {
+        selectedObject = e.target;
+    });
+
+    canvas.observe('selection:updated', function(e) {
+        cropImage();
+        selectedObject = e.target;
+    });
+
+    canvas.observe('selection:cleared', function(e) {
+        cropImage();
+    });
+
+    function cropImage() {
+
+        if(selectedObject && selectedObject.type === 'image' && selectedObject.picArea) {
+
+            if((selectedObject.width*selectedObject.scaleX < selectedObject.picArea.width*selectedObject.picArea.scaleX) || (selectedObject.height*selectedObject.scaleY < selectedObject.picArea.height * selectedObject.picArea.scaleY)) {
+                //alert(selectedObject.scaleX + " " + selectedObject.oldScaleX);
+                //selectedObject.scaleX = selectedObject.oldScaleX;
+                //selectedObject.scaleY = selectedObject.oldScaleY;
+                //selectedObject.width = selectedObject.picArea.width / selectedObject.scaleX; 
+                //selectedObject.height = selectedObject.picArea.height / selectedObject.scaleY;
+                //selectedObject.oldWidth = selectedObject.width;
+                //selectedObject.oldHeight = selectedObject.height;
+                //selectedObject.oldScaleX = selectedObject.scaleX;
+                //selectedObject.oldScaleY = selectedObject.scaleY;
+            } else {
+                //crop
+                selectedObject.oldScaleX = selectedObject.scaleX;
+                selectedObject.oldScaleY = selectedObject.scaleY;
+                selectedObject.oldWidth = selectedObject.width;
+                selectedObject.oldHeight = selectedObject.height;
+
+                selectedObject.cropX = (selectedObject.picArea.left - selectedObject.left) / selectedObject.scaleX;
+                selectedObject.cropY = (selectedObject.picArea.top - selectedObject.top) / selectedObject.scaleY;
+
+                selectedObject.width = selectedObject.picArea.width / selectedObject.scaleX; 
+                selectedObject.height = selectedObject.picArea.height / selectedObject.scaleY;
+
+                selectedObject.left = selectedObject.picArea.left;
+                selectedObject.top = selectedObject.picArea.top;
+            }   
+            selectedObject.setCoords();
+            canvas.remove(selectedObject.picArea);
+            selectedObject.opacity = 1;
+            selectedObject.hasRotatingPoint = true;
+            selectedObject.picArea = null;
+            canvas.discardActiveObject();
+
+            console.log(canvas.toJSON());
+
+            isCrop = false;
+        }
+
+    }
+
+    function addImage(imgLink, left, top) {
+        fabric.Image.fromURL(imgLink, function(img) {           
+            img.set({ 'left': left });
+            img.set({ 'top': top });
+            //img.set({ 'lockUniScaling': true });
+            img.scaleToWidth(300);
+
+            img.oldScaleX = img.scaleX;
+            img.oldScaleY = img.scaleY;
+
+            img.oldWidth = img.width;
+            img.oldHeight = img.height;
+
+            canvas.add(img);
+            canvas.setActiveObject(img);
+            canvas.renderAll();
+        });
+    }
+
+    addImage('PicSnippet.png', 100, 100);
+    addImage('29.png', 500, 100);
+
+    function addPictureArea(picture) {
+        var picArea = new fabric.Rect({
+            strokeWidth: 1,
+            fill: 'black',
+            opacity: 1,
+            width: picture.width * picture.scaleX,
+            height: picture.height * picture.scaleY,
+            left: picture.left,
+            top: picture.top,
+            angle: picture.angle,
+            selectable: false
+        });
+
+        canvas.add(picArea);
+        picArea.setCoords();
+        canvas.sendToBack(picArea);
+        picture.picArea = picArea;
+        canvas.renderAll();
+    }
+
+    fabric.util.addListener(canvas.upperCanvasEl, 'dblclick', function(e) {
+        var target = canvas.findTarget(e);
+
+        if(target && target.type === 'image' && !target.picArea) {
+            
+            isCrop = true;
+
+            addPictureArea(target);
+            target.opacity = 0.7;
+            target.hasRotatingPoint = false;
+            
+            if(target.cropX) {
+                target.left = target.picArea.left - target.cropX * target.scaleX;
+                target.top = target.picArea.top - target.cropY * target.scaleY;
+
+                target.scaleX = target.oldScaleX;
+                target.scaleY = target.oldScaleY;
+
+                target.width = target.oldWidth; 
+                target.height = target.oldHeight;
+
+                target.cropX = 0;
+                target.cropY = 0;            
+
+                target.setCoords();
+            }
+            canvas.renderAll();
+        }
+    });
+</script>
