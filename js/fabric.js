@@ -20542,8 +20542,8 @@ fabric.util.object.extend(fabric.Object.prototype, /** @lends fabric.Object.prot
           sW = Math.min(elementToDraw.naturalWidth || elementToDraw.width, w * this._filterScalingX),
           sH = Math.min(elementToDraw.naturalHeight || elementToDraw.height, h * this._filterScalingY),
           x = -w / 2, y = -h / 2,
-          sX = this.cropX * this._filterScalingX,
-          sY = this.cropY * this._filterScalingY;
+          sX = Math.max(0, this.cropX * this._filterScalingX),
+          sY = Math.max(0, this.cropY * this._filterScalingY);
 
       elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, w, h);
     },

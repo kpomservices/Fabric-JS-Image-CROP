@@ -154,4 +154,18 @@ canvas {
             canvas.renderAll();
         }
     });
+
+    fabric.Image.prototype._renderFill = (function _renderFill(ctx) {
+      return function _renderFill(ctx) {
+          var elementToDraw = this._element,
+              w = this.width, h = this.height,
+              sW = Math.min(elementToDraw.naturalWidth || elementToDraw.width, w * this._filterScalingX),
+              sH = Math.min(elementToDraw.naturalHeight || elementToDraw.height, h * this._filterScalingY),
+              x = -w / 2, y = -h / 2,
+              sX = this.cropX * this._filterScalingX,
+              sY = this.cropY * this._filterScalingY;
+
+          elementToDraw && ctx.drawImage(elementToDraw, sX, sY, sW, sH, x, y, w, h);
+      }
+    })(fabric.Image.prototype.add)    
 </script>
